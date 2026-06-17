@@ -7,7 +7,6 @@ use crate::ast::Expr;
 use crate::error;
 use crate::interp::{make_native_value, Interpreter, NativeFn};
 use crate::value::*;
-use crate::scope::Env;
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -549,11 +548,11 @@ fn install_reflect(interp: &mut Interpreter, realm: &Rc<Realm>) {
         let key = args.get(1).cloned().unwrap_or(Value::Undefined);
         Ok(Value::Bool(interp.has_property(&target, &to_property_key(&key))))
     }));
-    def_method(realm, &r, "deleteProperty", 2, Rc::new(|interp, _this, args| {
+    def_method(realm, &r, "deleteProperty", 2, Rc::new(|_interp, _this, args| {
         let target = args.get(0).cloned().unwrap_or(Value::Undefined);
         let key = to_property_key(&args.get(1).cloned().unwrap_or(Value::Undefined));
         if let Value::Object(o) = &target {
-            o.borrow_mut().props.remove(&key);
+            o.borrow_mut().props.shift_remove(&key);
             Ok(Value::Bool(true))
         } else { Ok(Value::Bool(false)) }
     }));
@@ -815,7 +814,7 @@ impl Interpreter {
 
     pub fn coerce_to_number(&mut self, v: &Value) -> Result<f64, Value> {
         match v {
-            Value::Object(o) => {
+            Value::Object(_) => {
                 let p = self.to_primitive(v, "number")?;
                 Ok(crate::value::to_number(&p))
             }

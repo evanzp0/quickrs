@@ -100,10 +100,6 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn col(&self) -> u32 {
-        self.cur.col
-    }
-
     /// Consume a semicolon or apply ASI.
     fn consume_semicolon(&mut self) -> Result<(), ParseError> {
         if self.is_punct(Punct::Semicolon) {
@@ -726,7 +722,7 @@ impl<'a> Parser<'a> {
         self.expect_punct(Punct::LParen)?;
         // Determine init
         let init: Option<ForInit>;
-        let mut for_in_of = false;
+        let for_in_of = false;
         if self.is_punct(Punct::Semicolon) {
             init = None;
             self.bump();
@@ -2201,7 +2197,7 @@ fn expr_to_pattern(e: Expr) -> Result<Pattern, ParseError> {
     match e {
         Expr::Ident(n) => Ok(Pattern::Ident(n)),
         Expr::Array(_) | Expr::Object(_) => expr_to_assign_target(e).and_then(|t| match t {
-            AssignTarget::Pattern(p) => Ok((*p)),
+            AssignTarget::Pattern(p) => Ok(*p),
             _ => Err(ParseError {
                 message: "invalid pattern".into(),
                 line: 0,

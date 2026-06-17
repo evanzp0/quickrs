@@ -4,7 +4,7 @@ use crate::realm::Realm;
 use crate::error;
 use crate::interp::{Interpreter, NativeFn};
 use crate::value::*;
-use crate::builtins::{make_ctor, install_global, install_global_ctor, def_method, native, CtorFn};
+use crate::builtins::{make_ctor, install_global_ctor, def_method, CtorFn};
 use std::rc::Rc;
 
 pub fn install(interp: &mut Interpreter, realm: &Rc<Realm>) {
@@ -276,7 +276,7 @@ pub fn install(interp: &mut Interpreter, realm: &Rc<Realm>) {
                         let prop = desc_to_property(&desc);
                         match prop {
                             Some(p) => { to.borrow_mut().props.insert(key, p); }
-                            None => { to.borrow_mut().props.remove(&key); }
+                            None => { to.borrow_mut().props.shift_remove(&key); }
                         }
                     }
                     return Ok(obj);
@@ -286,7 +286,7 @@ pub fn install(interp: &mut Interpreter, realm: &Rc<Realm>) {
                 let prop = desc_to_property(&desc);
                 match prop {
                     Some(p) => { o.borrow_mut().props.insert(key, p); }
-                    None => { o.borrow_mut().props.remove(&key); }
+                    None => { o.borrow_mut().props.shift_remove(&key); }
                 }
             }
             Ok(obj)
@@ -302,7 +302,7 @@ pub fn install(interp: &mut Interpreter, realm: &Rc<Realm>) {
                 if let Value::Object(o) = &obj {
                     match prop {
                         Some(p) => { o.borrow_mut().props.insert(k, p); }
-                        None => { o.borrow_mut().props.remove(&k); }
+                        None => { o.borrow_mut().props.shift_remove(&k); }
                     }
                 }
             }
@@ -324,7 +324,6 @@ pub fn install(interp: &mut Interpreter, realm: &Rc<Realm>) {
             result.borrow_mut().proto = Some(Value::Object(interp.realm().object_proto.clone()));
             if let Value::Object(o) = &obj {
                 let keys: Vec<PropKey> = {
-                    let b = o.borrow();
                     let mut ks = Vec::new();
                     collect_own_keys(&Value::Object(o.clone()), &mut ks, false, true);
                     ks

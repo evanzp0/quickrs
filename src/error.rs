@@ -1,7 +1,6 @@
 //! JS exception values and helpers to construct them.
 
 use crate::value::{ObjRef, ObjectInner, ObjectKind, Value};
-use std::rc::Rc;
 
 /// Construct a thrown value for an Error object of a given class name.
 pub fn throw_error(class: &str, message: &str) -> Value {

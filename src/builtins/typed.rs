@@ -4,7 +4,7 @@ use crate::realm::Realm;
 use crate::error;
 use crate::interp::{Interpreter, NativeFn};
 use crate::value::*;
-use crate::builtins::{make_ctor, install_global_ctor, install_global, def_method, CtorFn};
+use crate::builtins::{make_ctor, install_global_ctor, def_method, CtorFn};
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -92,7 +92,7 @@ fn install_typed_array(interp: &mut Interpreter, realm: &Rc<Realm>, name: &'stat
     let _ = interp;
 }
 
-fn build_typed(interp: &mut Interpreter, proto: &ObjRef, kind: TypedArrayKind, elem_size: usize, args: &[Value]) -> Result<Value, Value> {
+fn build_typed(_interp: &mut Interpreter, proto: &ObjRef, kind: TypedArrayKind, elem_size: usize, args: &[Value]) -> Result<Value, Value> {
     let buf;
     let byte_offset;
     let length;

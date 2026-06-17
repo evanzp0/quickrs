@@ -25,7 +25,7 @@ pub fn install(interp: &mut Interpreter, realm: &Rc<Realm>) {
     install_global_ctor(interp, realm, "String", ctor.clone(), realm.string_proto.clone());
     if let Value::Object(co) = &ctor {
         let co = co.clone();
-        def_method(realm, &co, "fromCharCode", 1, Rc::new(|interp, _this, args| {
+        def_method(realm, &co, "fromCharCode", 1, Rc::new(|_interp, _this, args| {
             let mut s = String::new();
             for a in args {
                 let code = to_int32(a) as u32;

@@ -674,23 +674,7 @@ impl<'a> Lexer<'a> {
         if c == b'/' && regex_allowed_before(prev) {
             return self.read_regex();
         }
-        macro_rules! p2 {
-            ($a:expr, $two:expr, $two_p:expr, $three:expr, $three_p:expr, $one:expr) => {{
-                if self.peek2() == Some($two) {
-                    self.bump();
-                    self.bump();
-                    $two_p
-                } else if $three.is_some() && self.peek2() == Some($three.unwrap()) && self.peek3() == Some($two) {
-                    self.bump();
-                    self.bump();
-                    self.bump();
-                    $three_p
-                } else {
-                    self.bump();
-                    $one
-                }
-            }};
-        }
+
         match c {
             b'(' => { self.bump(); Token::Punct(Punct::LParen) }
             b')' => { self.bump(); Token::Punct(Punct::RParen) }

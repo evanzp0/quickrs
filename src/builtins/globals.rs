@@ -6,7 +6,7 @@ use crate::asyncrt;
 use crate::error;
 use crate::interp::{Interpreter, NativeFn};
 use crate::value::*;
-use crate::builtins::{def_method, install_global};
+use crate::builtins::install_global;
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -255,7 +255,7 @@ pub fn install(interp: &mut Interpreter, realm: &Rc<Realm>) {
         o.borrow_mut().props.insert(PropKey::from_str("href"), Property::data(Value::from_string(s)));
         Ok(Value::Object(o))
     }));
-    def_global_fn(interp, realm, "fetch", 2, Rc::new(|interp, _t, args| {
+    def_global_fn(interp, realm, "fetch", 2, Rc::new(|interp, _t, _args| {
         // stub: return a rejected promise (no network in this sandbox)
         let p = interp.new_promise();
         interp.reject_promise(p.clone(), error::throw_type("fetch is not supported in quickrs"));

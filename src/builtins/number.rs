@@ -115,7 +115,7 @@ fn to_radix(n: f64, radix: u32) -> String {
     if n == f64::INFINITY { return "Infinity".to_string(); }
     if n == f64::NEG_INFINITY { return "-Infinity".to_string(); }
     let neg = n < 0.0;
-    let mut n = n.abs();
+    let n = n.abs();
     let int_part = n.trunc();
     let mut frac = n - int_part;
     let digits = b"0123456789abcdefghijklmnopqrstuvwxyz";

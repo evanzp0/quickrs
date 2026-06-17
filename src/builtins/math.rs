@@ -1,7 +1,7 @@
 //! Math object.
 
 use crate::realm::Realm;
-use crate::interp::{Interpreter, NativeFn};
+use crate::interp::Interpreter;
 use crate::value::*;
 use crate::builtins::{def_method, def_const_value};
 use std::rc::Rc;

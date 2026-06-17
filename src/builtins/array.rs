@@ -462,7 +462,6 @@ pub fn install(interp: &mut Interpreter, realm: &Rc<Realm>) {
         let cb = args.get(0).cloned();
         if let Some(cb) = &cb {
             if cb.is_callable() {
-                let n = items.len();
                 let mut err: Option<Value> = None;
                 items.sort_by(|a, b| {
                     if err.is_some() { return std::cmp::Ordering::Equal; }

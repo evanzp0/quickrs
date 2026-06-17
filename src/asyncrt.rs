@@ -6,7 +6,6 @@
 //! tasks fire.
 
 use crate::interp::Interpreter;
-use crate::value::*;
 use std::cell::RefCell;
 use std::collections::VecDeque;
 use std::rc::Rc;
@@ -27,6 +26,15 @@ pub struct AsyncRt {
     pub timers: Vec<MacroTask>,
     pub stop: bool,
     pub exit_code: i32,
+    /// Notifier used to wake up `run_event_loop` when a Rust async function
+    /// (registered via `Interpreter::register_async_fn`) completes. The event
+    /// loop `select!`s on this together with the next timer so that async fn
+    /// completions are processed without polling.
+    pub notify: Rc<tokio::sync::Notify>,
+    /// Number of Rust async futures currently spawned via `spawn_local` whose
+    /// results have not yet been folded back into the JS promise. The event
+    /// loop keeps running while this is non-zero.
+    pub pending_rust_futures: usize,
 }
 
 impl AsyncRt {
@@ -37,6 +45,8 @@ impl AsyncRt {
             timers: Vec::new(),
             stop: false,
             exit_code: 0,
+            notify: Rc::new(tokio::sync::Notify::new()),
+            pending_rust_futures: 0,
         }))
     }
 }
@@ -66,7 +76,7 @@ pub fn set_timeout(rt: &Rc<RefCell<AsyncRt>>, delay_ms: i64, task: Microtask) ->
 pub fn clear_timeout(rt: &Rc<RefCell<AsyncRt>>, id: u64) {
     let mut b = rt.borrow_mut();
     // Mark matching timers cancelled (ids are unique but we keep it simple).
-    b.timers.retain(|t| {
+    b.timers.retain(|_t| {
         // We don't store id on the task; instead cancel by matching pointer
         // equality is not possible. We store id in a side map? Simpler: store
         // id on MacroTask. Keep timers with different identity; cancel all that
@@ -117,20 +127,38 @@ pub async fn run_event_loop(interp: &mut Interpreter) -> i32 {
                 return rt.borrow().exit_code;
             }
         }
-        // Anything left?
-        let empty = rt.borrow().microtasks.is_empty() && rt.borrow().timers.is_empty();
+        // Anything left (including pending Rust async futures)?
+        let empty = {
+            let b = rt.borrow();
+            b.microtasks.is_empty() && b.timers.is_empty() && b.pending_rust_futures == 0
+        };
         if empty {
             return rt.borrow().exit_code;
         }
-        // Wait until the next timer is due, yielding to the reactor.
-        let next_when = rt.borrow().timers.iter().map(|t| t.when).min();
+        // Wait until the next timer is due OR a Rust async future completes.
+        // `select!` on the timer + a `Notify` (woken by `spawn_local`'d futures)
+        // avoids any polling — we sleep until there is actual work to do.
+        let (next_when, has_rust) = {
+            let b = rt.borrow();
+            (b.timers.iter().map(|t| t.when).min(), b.pending_rust_futures > 0)
+        };
+        // Clone the Notify handle before awaiting so we don't hold a borrow.
+        let notify = rt.borrow().notify.clone();
         if let Some(nw) = next_when {
             let now = Instant::now();
             if nw > now {
-                tokio::time::sleep_until(tokio::time::Instant::from_std(nw)).await;
+                tokio::select! {
+                    _ = tokio::time::sleep_until(tokio::time::Instant::from_std(nw)) => {}
+                    _ = notify.notified(), if has_rust => {}
+                }
             }
+            // else: timer is due now; loop immediately to run it.
+        } else if has_rust {
+            // Only Rust futures pending (no timers); block until one completes.
+            notify.notified().await;
         } else {
-            // only microtasks possibly remain; loop again immediately
+            // Only microtasks possibly remain (rare after draining); yield once
+            // to avoid a busy loop and let any queued work surface.
             tokio::task::yield_now().await;
         }
     }

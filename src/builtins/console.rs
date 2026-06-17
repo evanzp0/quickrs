@@ -5,7 +5,6 @@ use crate::interp::{Interpreter, NativeFn};
 use crate::value::*;
 use crate::builtins::{def_method, install_global};
 use std::rc::Rc;
-use std::cell::Cell;
 use std::collections::HashMap;
 
 pub fn install(interp: &mut Interpreter, realm: &Rc<Realm>) {

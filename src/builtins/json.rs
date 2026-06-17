@@ -2,7 +2,7 @@
 
 use crate::realm::Realm;
 use crate::error;
-use crate::interp::{Interpreter, NativeFn};
+use crate::interp::Interpreter;
 use crate::value::*;
 use crate::builtins::{def_method, install_global};
 use std::rc::Rc;
@@ -188,7 +188,7 @@ fn walk(interp: &mut Interpreter, holder: &Value, key: &PropKey, reviver: &Value
                         // can't easily remove from array fast path; set undefined
                         let _ = interp.set_property(&v, &k, Value::Undefined);
                     } else {
-                        oo.borrow_mut().props.remove(&k);
+                        oo.borrow_mut().props.shift_remove(&k);
                     }
                 }
             } else {

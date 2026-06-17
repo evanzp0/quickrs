@@ -574,7 +574,7 @@ impl Interpreter {
                     &self.scope.clone(),
                     false,
                 )?;
-                'outer: for (i, c) in cases.iter().enumerate() {
+                for (i, c) in cases.iter().enumerate() {
                     if !matched {
                         if let Some(t) = &c.test {
                             let tv = self.eval_expr(t)?;
@@ -1592,7 +1592,6 @@ impl Interpreter {
                 return self.get_property_own_chain(&wrapper, key);
             }
             Value::Object(_) => {}
-            _ => return Ok(Value::Undefined),
         }
         self.get_property_own_chain(obj, key)
     }
@@ -3201,7 +3200,7 @@ impl Interpreter {
             result
         });
         let promise_clone = promise.clone();
-        let mut driver = AsyncDriver {
+        let driver = AsyncDriver {
             coro,
             yielder_cell,
             promise: promise_clone,
@@ -3325,7 +3324,6 @@ impl Interpreter {
                 s.borrow().value.clone()
             } else { Value::Undefined }
         } else { Value::Undefined };
-        let interp = self.clone();
         let fulfilled_v = fulfilled;
         let handler_v = handler.clone();
         let resolve_v = resolve.clone();
@@ -3582,10 +3580,6 @@ impl ObjectKind {
             _ => CallKind::Other,
         }
     }
-}
-
-fn o_ret() -> Result<Value, Value> {
-    Ok(Value::Undefined)
 }
 
 /// Translate a JS regex into a Rust regex (approximate; Rust regex lacks

@@ -4,6 +4,7 @@
 //! binary in `src/main.rs`.
 
 pub mod ast;
+pub mod async_fns;
 pub mod asyncrt;
 pub mod builtins;
 pub mod error;

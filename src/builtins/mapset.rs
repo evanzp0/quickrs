@@ -1,7 +1,6 @@
 //! Map and Set constructors + prototypes.
 
 use crate::realm::Realm;
-use crate::error;
 use crate::interp::{Interpreter, NativeFn};
 use crate::value::*;
 use crate::builtins::{make_ctor, install_global_ctor, def_method, CtorFn};

@@ -4,7 +4,7 @@ use crate::realm::Realm;
 use crate::error;
 use crate::interp::{Interpreter, NativeFn};
 use crate::value::*;
-use crate::builtins::{make_ctor, install_global_ctor, install_global, def_method, CtorFn};
+use crate::builtins::{make_ctor, install_global_ctor, def_method, CtorFn};
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -75,8 +75,4 @@ pub fn install(interp: &mut Interpreter, realm: &Rc<Realm>) {
 
 thread_local! {
     pub static REVOKED_PROXIES: RefCell<std::collections::HashSet<usize>> = RefCell::new(std::collections::HashSet::new());
-}
-
-pub fn is_revoked(pd: &Rc<ProxyData>) -> bool {
-    pd.revoked || REVOKED_PROXIES.with(|s| s.borrow().contains(&(Rc::as_ptr(pd) as usize)))
 }
