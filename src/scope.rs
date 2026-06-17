@@ -10,6 +10,7 @@ use std::rc::Rc;
 
 /// A binding cell. `mutable=false` for `const` and for some class-private
 /// semantics; `initialized=false` models the temporal dead zone (TDZ).
+#[derive(Debug)]
 pub struct Binding {
     pub value: Value,
     pub mutable: bool,
@@ -26,7 +27,7 @@ impl Default for Binding {
     }
 }
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq, Debug)]
 pub enum EnvKind {
     Global,
     Function,
@@ -36,6 +37,7 @@ pub enum EnvKind {
     With,
 }
 
+#[derive(Debug)]
 pub struct EnvInner {
     pub bindings: IndexMap<Rc<str>, Binding>,
     pub parent: Option<Env>,
@@ -54,7 +56,7 @@ pub struct EnvInner {
     pub func_decls: Vec<Rc<str>>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Env(pub Rc<RefCell<EnvInner>>);
 
 impl Env {

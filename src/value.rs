@@ -11,10 +11,12 @@ use indexmap::IndexMap;
 use std::cell::RefCell;
 use std::rc::Rc;
 
+use ignorable::Debug;
+
 pub type ObjRef = Rc<RefCell<ObjectInner>>;
 
 /// A JavaScript value.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum Value {
     Undefined,
     Null,
@@ -28,6 +30,7 @@ pub enum Value {
 }
 
 /// A unique symbol value.
+#[derive(Clone, Debug)]
 pub struct Symbol {
     pub description: Option<Rc<str>>,
     pub id: u64,
@@ -46,7 +49,7 @@ impl std::hash::Hash for Symbol {
 }
 
 /// A simple BigInt (sign-magnitude with a Vec of u32 limbs).
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq, Debug)]
 pub struct BigInt {
     pub negative: bool,
     pub limbs: Vec<u32>,
@@ -54,7 +57,7 @@ pub struct BigInt {
 
 /// Property key: string or symbol. Integer indices are stored as strings
 /// but the array fast-path bypasses the hashmap.
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub enum PropKey {
     Str(Rc<str>),
     Sym(Rc<Symbol>),
@@ -79,7 +82,7 @@ impl From<&str> for PropKey {
 }
 
 /// A property descriptor (data or accessor).
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Property {
     pub kind: PropKind,
     pub writable: bool,
@@ -101,13 +104,14 @@ impl Property {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum PropKind {
     Data(Value),
     Accessor { get: Option<Value>, set: Option<Value> },
 }
 
 /// The runtime representation of a JS object.
+#[derive(Clone, Debug)]
 pub struct ObjectInner {
     pub props: IndexMap<PropKey, Property>,
     pub proto: Option<Value>,
@@ -118,6 +122,7 @@ pub struct ObjectInner {
 }
 
 /// Specialised object data.
+#[derive(Clone, Debug)]
 pub enum ObjectKind {
     Ordinary,
     /// Fast array storage. Holes are represented as `Value::Undefined` with a
@@ -152,12 +157,14 @@ pub enum ObjectKind {
     Proxy(Rc<ProxyData>),
 }
 
+#[derive(Debug)]
 pub struct ProxyData {
     pub target: Value,
     pub handler: Value,
     pub revoked: bool,
 }
 
+#[derive(Debug)]
 pub struct RegExpData {
     pub source: Rc<str>,
     pub flags: Rc<str>,
@@ -167,7 +174,7 @@ pub struct RegExpData {
     pub last_index: std::cell::Cell<usize>,
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum TypedArrayKind {
     Uint8,
     Int8,
@@ -179,6 +186,7 @@ pub enum TypedArrayKind {
     Float64,
 }
 
+#[derive(Debug)]
 pub struct PromiseState {
     pub state: PromiseStatus,
     pub value: Value,
@@ -189,20 +197,24 @@ pub struct PromiseState {
     pub handled: bool,
 }
 
+#[derive(Debug)]
 pub enum PromiseStatus {
     Pending,
     Fulfilled,
     Rejected,
 }
 
+#[derive(Debug)]
 pub struct Reaction {
     pub handler: Value,           // a function or Undefined/Null
     pub resolve: Value,           // the promise resolve fn for this reaction
     pub reject: Value,
 }
 
+#[derive(Debug)]
 pub struct GeneratorState {
     pub done: bool,
+    #[ignored(Debug)]
     pub coro: Option<CoroutineHandle>,
 }
 
@@ -211,6 +223,7 @@ pub type CoroutineHandle =
     corosensei::Coroutine<Result<Value, Value>, GeneratorYield, GeneratorResult>;
 
 /// What a coroutine yields out.
+#[derive(Debug)]
 pub enum GeneratorYield {
     /// `yield v` in a generator.
     Yield(Value),
@@ -220,6 +233,7 @@ pub enum GeneratorYield {
 }
 
 /// What a coroutine returns.
+#[derive(Debug)]
 pub enum GeneratorResult {
     /// Generator finished (`return v` or fall-off).
     Done(Value),
@@ -230,6 +244,7 @@ pub enum GeneratorResult {
 }
 
 /// A callable.
+#[derive(Debug)]
 pub struct Function {
     pub body: FunctionBody,
     pub name: Rc<str>,
@@ -252,17 +267,20 @@ pub struct Function {
 }
 
 /// A class field declaration.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct ClassField {
     pub name: Pattern,
     pub init: Option<Expr>,
 }
 
+#[derive(Debug)]
 pub enum FunctionBody {
     /// A Rust native function.
     Native {
+        #[ignored(Debug)]
         func: Rc<dyn Fn(&mut crate::interp::Interpreter, Value, &[Value]) -> Result<Value, Value>>,
         /// `Native` constructor support.
+        #[ignored(Debug)]
         constructor: Option<
             Rc<
                 dyn Fn(
@@ -746,6 +764,7 @@ pub fn module_state() -> Rc<RefCell<ModuleState>> {
     }))
 }
 
+#[derive(Debug)]
 pub struct ModuleState {
     pub evaluated: bool,
     pub exports: IndexMap<PropKey, Value>,
